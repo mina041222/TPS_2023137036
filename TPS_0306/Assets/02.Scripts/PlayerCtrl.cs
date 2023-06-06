@@ -16,6 +16,12 @@ public class PlayerCtrl : MonoBehaviour
     // 회전 속도 변수
     public float turnSpeed = 80.0f;
 
+    // 초기 생명 값
+    private readonly float initHp = 100.0f;
+
+    // 현재 생명 값
+    public float currHp;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -24,6 +30,9 @@ public class PlayerCtrl : MonoBehaviour
         anim = GetComponent<Animation>();
 
         anim.Play("Idle");
+
+        // HP 초기화
+        currHp = initHp;
     }
 
     // Update is called once per frame
@@ -70,4 +79,33 @@ public class PlayerCtrl : MonoBehaviour
             anim.CrossFade("Idle", 0.25f);   // 정지 시 Idle 애니메이션 실행
         }
     }
+
+    // 충돌한 Collider의 IsTrigger 옵션이 체크됐을 때 발생
+void OnTriggerEnter(Collider coll)
+{
+// 충돌한 Collider가 몬스터의 PUNCH이면 Player의 HP 차감
+if (currHp >= 0.0f && coll.CompareTag("PUNCH"))
+{
+currHp -= 10.0f;
+Debug.Log($"Player hp = {currHp / initHp}");
+// Player의 생명이 0 이하이면 사망 처리
+if (currHp <= 0.0f)
+{
+PlayerDie();
+}
+}
+}
+
+// Player의 사망 처리
+void PlayerDie()
+{
+Debug.Log("Player Die !");
+// // MONSTER 태그를 가진 모든 게임오브젝트를 찾아옴
+GameObject[] monsters = GameObject.FindGameObjectsWithTag("MONSTER");
+// // 모든 몬스터의 OnPlayerDie 함수를 순차적으로 호출
+foreach (GameObject monster in monsters)
+{
+monster.SendMessage("OnPlayerDie", SendMessageOptions.DontRequireReceiver);
+}
+}
 }

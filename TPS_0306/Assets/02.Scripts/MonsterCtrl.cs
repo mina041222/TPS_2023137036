@@ -30,9 +30,15 @@ private Animator anim;
 private readonly int hashTrace = Animator.StringToHash("IsTrace");
 private readonly int hashAttack = Animator.StringToHash("IsAttack");
 private readonly int hashHit = Animator.StringToHash("Hit");
+// 혈흔 효과 프리팹
+private GameObject bloodEffect;
+private readonly int hashPlayerDie = Animator.StringToHash("PlayerDie");
+private readonly int hashSpeed = Animator.StringToHash("Speed");
 // Start is called before the first frame update
 void Start()
 {
+	// BloodSprayEffect 프리팹 로드
+bloodEffect = Resources.Load<GameObject>("BloodSprayEffect");
 	// Animator 컴포넌트 할당
 anim = GetComponent<Animator>();
 // 몬스터의 Transform 할당
@@ -136,6 +142,31 @@ Destroy(coll.gameObject);
 // 피격 리액션 애니메이션 실행
 anim.SetTrigger(hashHit);
 }
-
+// 총알의 충돌 지점
+Vector3 pos = coll.GetContact(0).point;
+// 총알의 충돌 지점의 법선 벡터
+Quaternion rot = Quaternion.LookRotation(-coll.GetContact(0).normal);
+// 혈흔 효과를 생성하는 함수 호출
+ShowBloodEffect(pos, rot);
+}
+void ShowBloodEffect(Vector3 pos, Quaternion rot)
+{
+// 혈흔 효과 생성
+GameObject blood = Instantiate<GameObject>(bloodEffect, pos, rot, monsterTr);
+Destroy(blood, 1.0f);
+}
+// 자기 자신 충돌 감지를 위해서 함수를 추가
+void OnTriggerEnter(Collider coll)
+{
+Debug.Log(coll.gameObject.name);
+}
+void OnPlayerDie()
+{
+// 몬스터의 상태를 체크하는 코루틴 함수를 모두 정지시킴
+StopAllCoroutines();
+// 추적을 정지하고 애니메이션을 수행
+agent.isStopped = true;
+anim.SetFloat(hashSpeed, Random.Range(0.8f, 1.2f)); // 스피드를 위해서 추가해야 하는 코드
+anim.SetTrigger(hashPlayerDie);
 }
 }
